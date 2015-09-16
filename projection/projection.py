@@ -2,8 +2,8 @@
 Abstract projection technique.
 
 This package implements an abstract class for projection techniques used in
-visualization area. It requires NumPy (http://www.numpy.org/) and
-matplotlib (http://www.matplotlib.org/) libraries.
+visualization area. It requires NumPy (http://www.numpy.org/) and matplotlib
+(http://www.matplotlib.org/) libraries.
 """
 from __future__ import print_function
 
@@ -105,7 +105,7 @@ class Projection():
         Plot the projection computed by a technique.
         """
         y = self.projection
-        mpl.scatter(y[:, 0], y[:, 1], 25, c=self.data_class)
+        mpl.scatter(y[:, 0], y[:, 1], c=self.data_class)
         mpl.show()
 
 

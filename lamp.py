@@ -1,52 +1,42 @@
 """
-LAMP projection
+LAMP
+
+LAMP multidimensional projection technique.
+http://www.lcad.icmc.usp.br/~nonato/pubs/lamp.pdf
 """
 from __future__ import print_function
-import numpy as np
 from projection import projection
 from force import force
 
+try:
+    import numpy as np
+except ImportError as msg:
+    error = ", please install the following packages:\n"
+    error += "    NumPy      (http://www.numpy.org)"
+    raise ImportError(str(msg) + error)
+
 
 class Lamp(projection.Projection):
+    """
+    LAMP projection.
+    """
     def __init__(self, data, data_class, sample=None, sample_projection=None):
+        """
+        Class initialization.
+        """
         assert type(data) is np.ndarray, "*** ERROR (LAMP): Data is of wrong \
                 type!"
 
         projection.Projection.__init__(self, data, data_class)
         self.sample = sample
         self.sample_projection = sample_projection
-        # self.initialization()
 
-    def initialization(self):
+    def project(self, tol=1e-6):
         """
-        TODO: fix sample condition
+        Projection method.
+
+        Projection itself.
         """
-        # ninst = self.data_ninstances
-        sample_condition = self.sample and (not self.sample_projection)
-
-        print(bool(self.sample), bool(not self.sample_projection))
-        print(bool(sample_condition))
-        print(bool(not sample_condition))
-
-        if sample_condition or (not sample_condition):
-            print("*** WARNING (LAMP): Using random sample!")
-            self.sample = None
-            self.sample_projection = None
-
-        # if not self.sample:
-        #     self.sample = np.random.permutation(ninst)
-        # else:
-        #     self.sample = sample
-
-        # if not self.sample_projection:
-        #     force_proj = force.Force(self.data[self.sample, :], [])
-        #     force_proj.project()
-        #     self.sample_projection = force_proj.get_projection()
-        # else:
-        #     self.sample_projection = sample_projection
-
-    def project(self):
-        tol = 1e-6
         ninst, dim = self.data.shape    # number os instances, data dimension
         k = len(self.sample)            # number os sample instances
         p = self.projection_dim         # visual space dimension
@@ -61,7 +51,7 @@ class Lamp(projection.Projection):
                 # verify if the point to be projectec is a control point
                 # avoids division by zero
                 if np.linalg.norm(xs[i] - x[pt]) < tol:
-                    alpha[i] = 1e14
+                    alpha[i] = 1e14  # infinity
                 else:
                     alpha[i] = 1.0 / np.linalg.norm(xs[i] - x[pt])**2
 
@@ -109,6 +99,7 @@ def run():
     data_class = data_file[:, dim - 1]
     sample = np.random.permutation(ninst)
     sample = sample[range(sample_size)]
+
     # force
     start_time = time.time()
     print("Projecting samples... ", end="")
@@ -117,6 +108,7 @@ def run():
     f.project()
     sample_projection = f.get_projection()
     print("Done. (" + str(time.time() - start_time) + "s.)")
+
     # lamp
     start_time = time.time()
     print("Projecting... ", end="")

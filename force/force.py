@@ -1,16 +1,33 @@
 """
-Force-Scheme
+Force
+
+Force multidimensional projection technique.
+http://www.lcad.icmc.usp.br/%7Enonato/pubs/TejadaEtAl.pdf
 """
 
 from __future__ import print_function
 from projection import projection
-import numpy as np
+
+try:
+    import numpy as np
+    import scipy.spatial.distance as dist
+except ImportError as msg:
+    error = ", please install the following packages:\n"
+    error += "    NumPy      (http://www.numpy.org)\n"
+    error += "    SciPy      (http://www.scipy.org)"
+    raise ImportError(str(msg) + error)
 
 
 class Force(projection.Projection):
+    """
+    Force projection.
+    """
     def __init__(self, data, data_class, dtype="data", delta_frac=8,
                  niter=50, tol=1.0e-6):
-        projection.Projection.__init__(self, data, data_class)
+        """
+        Class initialization.
+        """
+        projection.Projection.__init__(self, data, data_class, 2)
         self.dtype = dtype
         self.delta_frac = delta_frac
         self.niter = niter
@@ -18,26 +35,30 @@ class Force(projection.Projection):
 
     def project(self):
         """
-        Projection
+        Project method.
+
+        Projection itself.
         """
         assert type(self.data) is np.ndarray, \
-            "*** ERROR (Force-Scheme): project input must be of numpy.array" \
-            "type."
+            "*** ERROR (Force): project input must be of numpy.ndarray \
+                type."
 
         # number of instances, dimension of the data
         ninst = self.data_ninstances
 
-        Y = np.random.random((ninst, 2))    # random initialization
+        # random initialization
+        Y = np.random.random((ninst, self.projection_dim))
 
         # computes distance in R^n
         if self.dtype == "data":
-            distRn = self.pdist(self.data)
+            distRn = dist.squareform(dist.pdist(self.data))
         elif self.dtype == "dmat":
             distRn = self.data
         else:
-            print("*** ERROR (Force-Scheme): Undefined data type.")
+            print("*** ERROR (Force): Undefined data type.")
         assert type(distRn) is np.ndarray and distRn.shape == (ninst, ninst), \
-            "*** ERROR (Force-Scheme): project input must be numpy.array type."
+            "*** ERROR (Force): project input must be numpy.ndarray \
+                type."
 
         idx = np.random.permutation(ninst)
 
@@ -61,25 +82,13 @@ class Force(projection.Projection):
                         Y[inst2] += delta * v
         self.projection = Y
 
-    def pdist(self, x):
-        """
-        Pairwise distance between pairs of objects
-        TODO: find a faster function
-        """
-        n, d = x.shape
-        dist = np.zeros((n, n))
-        for i in range(n):
-            for j in range(n):
-                dist[i][j] = np.linalg.norm(x[i] - x[j])
-        return dist
 
-
-def test():
+def run():
     import time
     import sys
     print("Loading data set... ", end="")
     sys.stdout.flush()
-    data_file = np.loadtxt("mammals.data", delimiter=",")
+    data_file = np.loadtxt("iris.data")
     print("Done.")
     n, dim = data_file.shape
     data = data_file[:, range(dim - 1)]
@@ -87,10 +96,10 @@ def test():
     start_time = time.time()
     print("Projecting... ", end="")
     sys.stdout.flush()
-    force = Force(data, data_class)
-    force.project()
+    f = Force(data, data_class)
+    f.project()
     print("Done. (" + str(time.time() - start_time) + "s)")
-    force.plot()
+    f.plot()
 
 if __name__ == "__main__":
-    test()
+    run()
